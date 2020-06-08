@@ -119,14 +119,20 @@ public class Parser {
         }
     }
 
+    /*
+     * Helper method to check if a string can be converted to an integer
+     */
     private static void number() throws ParseException {
         try {
-            new BigInteger(current);
+            new BigInteger(current);    //Creates a new BigInteger, will throw NumberFormatException if fails
         } catch(NumberFormatException e) {
             error(current + " is not a number");
         }
     }
 
+    /*
+     * Helper method to check for a left parenthesis, and then advance the token
+     */
     private static void leftParen() throws ParseException {
         if(current.equals("(")) {
             next();
@@ -135,6 +141,9 @@ public class Parser {
         }
     }
 
+    /*
+     * Helper method to check for a right parenthesis, will advance the next token
+     */
     private static void rightParen() throws ParseException {
         if(current.equals(")")) {
             next();
@@ -143,6 +152,9 @@ public class Parser {
         }
     }
 
+    /*
+     * Helper method to check for a comma, will advance to the next token
+     */
     private static void comma() throws ParseException {
         if(current.equals(",")) {
             next();
@@ -151,6 +163,9 @@ public class Parser {
         }
     }
 
+    /*
+     * Helper method to check for a colon, will advance the next token
+     */
     private static void colon() throws ParseException {
         if(current.equals(":")) {
             next();
@@ -159,6 +174,9 @@ public class Parser {
         }
     }
 
+    /*
+     * Helper method to check for semi colon, will advance to the next token.
+     */
     private static void semiColon() throws ParseException {
         if(current.equals(";")) {
             next();
@@ -167,15 +185,23 @@ public class Parser {
         }
     }
 
+    /*
+     * Helper method to check for period.
+     * This should always be the last token, if properly formatted.
+     * Will show the window to the user.
+     */
     private static void period() throws ParseException {
         if(current.equals(".")) {
-            frame.pack();
+            frame.pack();   //Makes sure everything is arrayed properly
             frame.setVisible(true);
         } else {
             error("Symbol must be a ., not a " + current);
         }
     }
 
+    /*
+     * Helper method to check for the keyword 'End', will advance to the next token.
+     */
     private static void end() throws ParseException {
         if(current.equals("End")) {
             next();
@@ -184,6 +210,10 @@ public class Parser {
         }
     }
 
+    /*
+     * Method for the non terminal GUI.
+     * BNF = gui ::= Window STRING '('NUMBER ',' NUMBER ')' layout widgets End '.'
+     */
     private static void gui() throws ParseException {
         window();
         layout();
@@ -192,48 +222,73 @@ public class Parser {
         period();
     }
 
+    /*
+     * Method for the keyword 'Window'.
+     * Creates a new JFrame with the specified title and dimensions.
+     * Should follow the progression: Window STRING '('NUMBER ',' NUMBER ')'
+     */
     private static void window() throws ParseException {
         if(current.equals("Window")) {
-            next();
-            string();
-            frame = new JFrame(current);
-            frame.setLocationRelativeTo(null);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            next();
-            leftParen();
-            number();
-            int dimension1 = Integer.parseInt(current);
-            next();
-            comma();
-            number();
-            int dimension2 = Integer.parseInt(current);
-            frame.setPreferredSize(new Dimension(dimension1, dimension2));
-            frame.setSize(new Dimension(dimension1, dimension2));
-            next();
-            rightParen();
-            toAddTo = frame;
+            next(); //Should move token to a string
+            string();   //Checks validity of string
+            frame = new JFrame(current);    //Sets title of frame
+            frame.setLocationRelativeTo(null);  //Show in the center
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);   //Close the program when the window closes
+            next(); //Should be a parenthesis
+            leftParen();    //Checks if left parenthesis
+            number();   //Checks if a number
+            int dimension1 = Integer.parseInt(current); //Saves the dimension as an int
+            next(); //Should be a comma
+            comma();    //Checks if a comma
+            number();   //Checks if valid number
+            int dimension2 = Integer.parseInt(current); //Saves the dimension as an int
+            frame.setPreferredSize(new Dimension(dimension1, dimension2));  //Sets preferred size
+            frame.setSize(new Dimension(dimension1, dimension2));   //Sets actual size
+            next(); //Should be a right parenthesis
+            rightParen();   //Checks if right parenthesis
+            toAddTo = frame;    //Sets the current container to add new widgets to.
         } else {
             error("Keyword 'Window' is needed");
         }
     }
 
+    /*
+     * Method for the layout non terminal
+     * BNF = layout ::= Layout layout_type ':'
+     */
     private static void layout() throws ParseException {
-        if(current.equals("Layout")) {
-            next();
-            layoutType();
-            colon();
-        } else {
+        if(current.equals("Layout")) {  //Check to make sure proper keyword
+            next(); //Should be a layout_type
+            layoutType();   //Pass control to layoutType
+            colon();    //Check if a colon is present
+        } else { //If keyword is missing
             error("Keyword 'Layout' is needed");
         }
     }
 
+    /*
+     * Method for the non terminal widgets.
+     * Note that this is a recursive production
+     * BNF = widgets ::= widget widgets | widget
+     * widgets will always be followed by the 'End' keyword
+     */
     private static void widgets() throws ParseException {
-        if(!current.equals("End")) {
+        if(!current.equals("End")) {    //Checks if there are more widgets to add
             widget();
             widgets();
         }
     }
 
+    /*
+     * Method for the non terminal widget.
+     * BNF = widget ::=
+     *                  Button STRING ';' |
+     *                  Group radio_buttons End ';' |
+     *                  Label STRING ';' |
+     *                  Panel layout widgets End ';' |
+     *                  Textfield NUMBER ';'
+     * Switch is used instead of if else for readability
+     */
     private static void widget() throws ParseException {
         switch (current) {
             case "Button" -> button();
@@ -241,34 +296,46 @@ public class Parser {
             case "Label" -> label();
             case "Panel" -> panel();
             case "Textfield" -> textfield();
-            default -> error("Invalid Keyword: " + current);
+            default -> error("Invalid Keyword: " + current);    //If invalid keyword
         }
     }
 
+    /*
+     * Method for the keyword 'Textfield'.
+     * Creates and adds a new textfield.
+     * Number represents the number of columns in the textfield
+     * BNF = Textfield NUMBER ';'
+     */
     private static void textfield() throws ParseException {
         if(current.equals("Textfield")) {
-            next();
-            number();
-            int dimension1 = Integer.parseInt(current);
-            next();
-            semiColon();
-            TextField field = new TextField();
-            field.setColumns(dimension1);
-            toAddTo.add(field);
+            next(); //Advance to next token
+            number();   //Check if valid number
+            int dimension1 = Integer.parseInt(current); //Convert to integer
+            next(); //Advance to the next token
+            semiColon();    //Check for semicolon
+            TextField field = new TextField();  //Create the textfield
+            field.setColumns(dimension1);   //Set the width
+            toAddTo.add(field); //Add to the appropriate panel
         }
     }
 
+    /*
+     * Method for the keyword 'Panel'.
+     * Creates a new JPanel.
+     * Ensures that nested items are added to this until the End keyword is reached.
+     * BNF = Panel layout widgets End ';'
+     */
     private static void panel() throws ParseException {
-        if(current.equals("Panel")) {
-            JPanel panel = new JPanel();
-            toAddTo.add(panel);
-            toAddTo = panel;
-            next();
-            layout();
-            widgets();
-            end();
-            semiColon();
-            toAddTo = toAddTo.getParent();
+        if(current.equals("Panel")) {   //Keyword check
+            JPanel panel = new JPanel();    //Creates the panel
+            toAddTo.add(panel); //Adds it to the parent object
+            toAddTo = panel;    //Sets the panel as the container to add to
+            next(); //Next token
+            layout();   //Pass control to layout
+            widgets();  //Pass control to widgets
+            end();      //Check for end
+            semiColon();    //Check for semicolon
+            toAddTo = toAddTo.getParent();  //Revert to parent container to add things to
         }
     }
 

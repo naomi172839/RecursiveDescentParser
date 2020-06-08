@@ -1,84 +1,121 @@
+/*
+ * Copyright (c) 2020.
+ * Author: nbonnin (Naomi Bonnin)
+ * Class: CMSC 330 at UMGC
+ * Last Modified: 6/8/20, 6:03 PM
+ * Description: This program attempts to create a GUI from a text file that contains
+ *  commands in the proper BNF.  The grammer is defined in the project description.
+ */
+
+/*
+ * Imports used at various points throughout the program.
+ * Concurrent lists are used because of swing multithreading.
+ */
 import javax.swing.*;
 import java.awt.*;
-import java.io.*;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/*
+ * The parser class is the bread and butter of the program.
+ * It performs all of the actual parsing.
+ * All the methods are static and can be used from a static context.
+ * The loadFile method should be called followed by the parse method
+ */
 public class Parser {
 
-    static Queue<String> split;
-    static String current;
-    static String lookahead;
-    static JFrame frame = new JFrame();
-    static Container toAddTo;
-    static ButtonGroup buttonsToAddTo;
+    /*
+     * Class variables used throughout the program
+     */
+    static Queue<String> split; //Contains the pre-parsed text file
+    static String current;  //Current token
+    static String lookahead;    //Lookahead token
+    static JFrame frame = new JFrame(); //Frame that is displayed
+    static Container toAddTo;   //Aids with the use of nested panels
+    static ButtonGroup buttonsToAddTo;  //Aids with nested groups
 
-    public static void loadFile(File input) throws ParseException {
+    /*
+     * Prepares the text file for parsing.
+     * Complex method does a significant amount of preprocessing.
+     * Will display a error if the file can not be found.
+     * Note that spaces are placed around character literals to allow them to be treated as their own tokens
+     */
+    public static void loadFile(Path path) {
         try {
-            String overall = new String(Files.readAllBytes(Paths.get("Resources/test.txt")));
-            overall = overall.replace("(", " ( ");
-            overall = overall.replace(")", " ) ");
-            overall = overall.replace(":", " : ");
-            overall = overall.replace(";", " ; ");
-            overall = overall.replace(".", " . ");
-            overall = overall.replace(",", " , ");
-            split = new LinkedBlockingQueue<>(Arrays.asList(overall.split("[\\s]")));
-            split.removeAll(Collections.singleton(""));
-            next();
-        } catch (FileNotFoundException e) {
-            throw new ParseException("File not Found");
+            String overall = new String(Files.readAllBytes(path));  //Read in the text file into a string
+            overall = overall.replace("(", " ( ");  //Place spaces around the parenthesis
+            overall = overall.replace(")", " ) ");  //Places spaces around the parenthesis
+            overall = overall.replace(":", " : ");  //Places spaces around the colon
+            overall = overall.replace(";", " ; ");  //Place spaces around the semicolon
+            overall = overall.replace(".", " . ");  //Places spaces around the period
+            overall = overall.replace(",", " , ");  //Places spaces around the commas
+            overall = overall.replace("\n",""); //Removes pesky new line characters
+            split = new LinkedBlockingQueue<>(Arrays.asList(overall.split("[\\s]")));   //Splits on whitespace
+            split.removeAll(Collections.singleton("")); //Removes any empty strings
+            split.removeAll(Collections.singleton("\n"));   //Removes any remaining new line characters
+            next(); //Loads in the first token
         } catch (IOException e) {
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(frame,e.getMessage() + " Not Found",  //Displays the error message
+                    "Parse Error",JOptionPane.ERROR_MESSAGE);
+            System.exit(0); //Exits the program
         }
     }
 
+    /*
+     * Helper method to load the next token
+     * Note that any remaining spaces and empty strings are ignored.
+     * Null checks are performed
+     */
     private static void next() {
-        current = split.poll();
-        lookahead = split.peek();
-        if(current == null) {
+        current = split.poll(); //Load in current from head of the queue
+        lookahead = split.peek();   //Peak at the next token at the head of the queue
+        if(current == null) {   //Null check to prevent null pointer exception
             return;
         }
-        if(current.equals(" ") || current.equals("")) {
-            next();
+        if(current.equals(" ") || current.equals("")) { //To ignore  spaces and empty strings
+            next(); //Recursively go through the tokens until an appropriate token is found
         }
     }
 
+    /*
+     * Helper method to check the character at the head of the string
+     */
     private static char atHead(String string) {
-        return string.charAt(0);
+        return string.charAt(0);    //Return character at the head
     }
 
+    /*
+     * Helper method to return the character at the tail of the string
+     */
     private static char atTail(String string) {
-        return string.charAt(string.length()-1);
+        return string.charAt(string.length()-1);    //Return the character at the tail
     }
 
-    private static void removeHead() {
-        current = current.substring(1);
-    }
-
-    private static void removeTail() {
-        current = current.substring(0, current.length()-1);
-    }
-
-    private static void runList() {
-        for(String token : split) {
-            System.out.print(current+ " ");
-            System.out.println(lookahead);
-            next();
-        }
-    }
-
+    /*
+     * Helper method to remove quotes from strings and to ensure that multi word strings are captured
+     */
     private static void string() throws ParseException {
-        if(atHead(current) == '"') {
-            if(atTail(current) == '"') {
-                current = current.substring(1, current.length()-1);
-            } else {
-                error("Strings must be surrounded with quotations.");
+        if(atHead(current) == '"') {    //Makes sure string is in proper format
+            current = current.substring(1); //Remove leading quote
+            StringBuilder sb = new StringBuilder(); //Used to hold the string
+            while(atTail(current) != '"') { //While there is not a closing parenthesis
+                if(current == null) {   //If the end of the file is reached and there is not a closing parenthesis
+                    error("Mismatched Quotations");
+                }
+                sb.append(current).append(" "); //Add the current token to the string builder and adds a space
+                next(); //Loads the next token
             }
+            current = current.substring(0, current.length()-1); //Removes tailing quotation
+            sb.append(current); //Add current token to the string builder;
+            current = sb.toString();    //Make current the total string;
         } else {
-            error("Strings must be surrounded with quotations.");
+            error("Strings must be surrounded with quotations.");   //Will ultimately show a dialog with this as an error
         }
     }
 
@@ -310,17 +347,23 @@ public class Parser {
                 next();
                 comma();
                 int dimension4 = Integer.parseInt(current);
-                next();
                 grid.setHgap(dimension3);
                 grid.setVgap(dimension4);
             }
+            next();
             rightParen();
             toAddTo.setLayout(grid);
         }
     }
 
-    public static void parse() throws ParseException {
-        gui();
+    public static void parse() {
+        try {
+            gui();
+        } catch (ParseException e) {
+            JOptionPane.showMessageDialog(frame,e.getMessage(), "Parse Error",JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
+
+        }
     }
 
     public static class ParseException extends Exception {
@@ -333,6 +376,5 @@ public class Parser {
     public static void error(String message) throws ParseException {
         throw new ParseException(message);
     }
-
 
 }

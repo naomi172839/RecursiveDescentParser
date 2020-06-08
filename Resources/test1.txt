@@ -13,4 +13,4 @@ Window "Calculator" (200, 200) Layout Flow:
    Label "";
    Button "0";
   End;
-End.
+ End.

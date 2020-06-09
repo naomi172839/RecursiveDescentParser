@@ -26,10 +26,6 @@ public class Main {
     public static void main(String[] args) {
         Parser.loadFile(Paths.get("Resources/test1.txt"));  //Load in the file
         Parser.parse(); //Perform the actual parse
-        Parser.loadFile(Paths.get("Resources/test2.txt"));  //Load in the file
-        Parser.parse(); //Perform the actual parse
-        Parser.loadFile(Paths.get("Resources/test3.txt"));  //Load in the file
-        Parser.parse(); //Perform the actual parse
     }
 
 }

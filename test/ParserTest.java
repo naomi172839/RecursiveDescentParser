@@ -29,6 +29,16 @@ public class ParserTest {
     }
 
     /*
+     * This window tests nested panels
+     */
+    @Test
+    public void testNestedPanels() throws InterruptedException {
+        Parser.loadFile(Paths.get("Resources/test0.txt"));
+        Parser.parse();
+        sleep(10000);
+    }
+
+    /*
      * This window tests a non nested Grid layout with 4 arguments
      * This window tests Label keyword
      * This window tests Textfield keyword

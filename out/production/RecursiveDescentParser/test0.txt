@@ -1,0 +1,14 @@
+Window "Test 0" (500, 200) Layout Flow:
+    Panel Layout Flow:
+        Button "Panel 1";
+        Label "Panel 1";
+        Panel Layout Flow:
+            Button "Panel 2";
+            Label "Panel 2";
+            Panel Layout Flow:
+                Button "Panel 3";
+                Label "Panel 3";
+            End;
+        End;
+    End;
+End.

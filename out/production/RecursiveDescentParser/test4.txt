@@ -1,0 +1,6 @@
+Window "Test 4" (300, 300) Layout Flow:
+    Button "Button 1";
+    Button "Button 2";
+    Label "Label 1";
+    Textfield 20;
+End.

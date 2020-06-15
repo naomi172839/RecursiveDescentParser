@@ -1,0 +1,16 @@
+Window "Test Number 3" (400, 400) Layout Grid(2, 2):
+    Panel Layout Grid(1, 1):
+        Group
+            Radio "Choice 1";
+            Radio "Choice 2";
+        End;
+    End;
+    Panel Layout Grid(1, 1):
+        Group
+            Radio "Choice 3";
+            Radio "Choice 4";
+        End;
+    End;
+    Label "Label 1";
+    Button "Button 1";
+End.

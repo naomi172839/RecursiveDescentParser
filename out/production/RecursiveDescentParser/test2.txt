@@ -1,0 +1,18 @@
+Window "Test2" (500, 500) Layout Grid(5, 5, 2, 2):
+ Label "Label 1";
+ Textfield 10;
+ Label "Label 2";
+ Textfield 10;
+ Label "Label 3";
+ Textfield 10;
+ Label "Label 4";
+ Textfield 10;
+ Label "Label 5";
+ Textfield 10;
+ Label "Label 6";
+ Textfield 10;
+ Label "Label 7";
+ Textfield 10;
+ Label "Label 8";
+ Textfield 10;
+ End.
